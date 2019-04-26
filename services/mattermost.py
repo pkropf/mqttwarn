@@ -38,7 +38,7 @@ def plugin(srv, item):
         j = json.loads(text)
         keylen = vallen = 10
         for key in j:
-            # print type(key), keylen, len(key)
+            # print(type(key), keylen, len(key))
             if type(key) == unicode and keylen < len(key):
                 keylen = len(key)
             if type(j[key]) == unicode and vallen < len(j[key]):
@@ -66,7 +66,7 @@ def plugin(srv, item):
     if icon_url is not None:
         payload["icon_url"]    = icon_url
 
-    # print payload
+    # print(payload)
 
     headers = {
         "Content-type" : "application/json",

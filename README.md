@@ -322,7 +322,7 @@ _mqttwarn_ supports a number of services (listed alphabetically below):
 * [gss2](#gss2)
 * [hangbot](#hangbot)
 * [hipchat](#hipchat)
-* [http](#http)
+* [httpie](#httpie)
 * [icinga2](#icinga2)
 * [ifttt](#ifttt)
 * [influxdb](#influxdb)
@@ -948,9 +948,9 @@ The notify parameter (True or False) trigger a user notification (change the tab
 
 ![Hipchat](assets/hipchat.png)
 
-### `http`
+### `httpie`
 
-The `http` service allows GET and POST requests to an HTTP service.
+The `httpie` service allows GET and POST requests to an HTTP service.
 
 Each target has five parameters:
 
@@ -961,7 +961,7 @@ Each target has five parameters:
 5. `None` or True to force the transformation of the third parameter to a json object and to send the HTTP header `Content-Type` with a value of `application/json` when using `post`
 
 ```ini
-[config:http]
+[config:httpie]
 timeout = 60
 
 targets = {

@@ -54,7 +54,7 @@ def plugin(srv, item):
             else:
                 try:
                     params[key] = params[key].format(**item.data).encode('utf-8')
-                except Exception, e:
+                except Exception as e:
                     srv.logging.debug("Parameter %s cannot be formatted: %s" % (key, str(e)))
                     return False
 
@@ -78,7 +78,7 @@ def plugin(srv, item):
 
             resp = urllib2.urlopen(request, timeout=timeout)
             data = resp.read()
-        except Exception, e:
+        except Exception as e:
             srv.logging.warn("Cannot GET %s: %s" % (resource, str(e)))
             return False
 
@@ -102,8 +102,8 @@ def plugin(srv, item):
                 request.add_header("Authorization", "Basic %s" % auth)
             resp = urllib2.urlopen(request, timeout=timeout)
             data = resp.read()
-            # print "POST returns ", data
-        except Exception, e:
+            # print("POST returns ", data)
+        except Exception as e:
             srv.logging.warn("Cannot POST %s: %s" % (url, str(e)))
             return False
 

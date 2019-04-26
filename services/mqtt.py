@@ -16,7 +16,7 @@ def conf(ini_file, params):
         f = open(ini_file, 'r')
         c.readfp(f)
         f.close()
-    except Exception, e:
+    except Exception as e:
         raise
 
     if c.has_section('defaults'):
@@ -81,7 +81,7 @@ def plugin(srv, item):
     if ini_file is not None:
         try:
             data = conf(ini_file, params)
-        except Exception, e:
+        except Exception as e:
                 srv.logging.error("Target mqtt cannot load/parse INI file `%s': %s", ini_file, str(e))
                 return False
 
@@ -107,7 +107,7 @@ def plugin(srv, item):
             auth=auth,
             tls=tls,
             **params)
-    except Exception, e:
+    except Exception as e:
         srv.logging.warning("Cannot PUBlish via `mqtt:%s': %s" % (item.target, str(e)))
         return False
 

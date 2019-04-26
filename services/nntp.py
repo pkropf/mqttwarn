@@ -49,7 +49,7 @@ def plugin(srv, item):
 
         nntp.post(msg_file)
         nntp.quit()
-    except Exception, e:
+    except Exception as e:
         srv.logging.warn("Cannot post to %s newsgroup: %s" % (newsgroup, str(e)))
         return False
 

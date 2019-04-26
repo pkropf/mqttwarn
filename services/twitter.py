@@ -28,7 +28,7 @@ def plugin(srv, item):
     except twitter.TwitterError, e:
         srv.logging.error("TwitterError: %s" % (str(e)))
         return False
-    except Exception, e:
+    except Exception as e:
         srv.logging.error("Error sending tweet to %s: %s" % (item.target, str(e)))
         return False
 

@@ -42,7 +42,7 @@ def daraFv(srv, item, data, col_data, mapping):
                 if key in mapping:
                     try:
                         col_data[mapping[key]] = data[key].format(**data).encode('utf-8')
-                    except Exception, e:
+                    except Exception as e:
                         col_data[mapping[key]] = data[key]
 
 def plugin(srv, item):
@@ -66,7 +66,7 @@ def plugin(srv, item):
     try:
         conn = MySQLdb.connect(host=host, user=user, passwd=passwd, db=dbname)
         cursor = conn.cursor()
-    except Exception, e:
+    except Exception as e:
         srv.logging.warn("Cannot connect to mysql: %s" % (str(e)))
         return False
 
@@ -84,7 +84,7 @@ def plugin(srv, item):
         if unknown_keys is not None:
             srv.logging.debug("Skipping unused keys %s" % ",".join(unknown_keys))
         conn.commit()
-    except Exception, e:
+    except Exception as e:
         srv.logging.warn("Cannot add mysql row: %s" % (str(e)))
         cursor.close()
         conn.close()

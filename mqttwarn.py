@@ -14,9 +14,8 @@ try:
     import json
 except ImportError:
     import simplejson as json
-import Queue
+import queue
 import threading
-import imp
 try:
     import hashlib
     md = hashlib.md5
@@ -25,7 +24,7 @@ except ImportError:
     md = md5.new
 import os
 import socket
-from ConfigParser import RawConfigParser, NoOptionError
+from configparser import RawConfigParser, NoOptionError
 import codecs
 import ast
 import re
@@ -69,7 +68,7 @@ class Config(RawConfigParser):
     def __init__(self, configuration_file):
         RawConfigParser.__init__(self)
         f = codecs.open(configuration_file, 'r', encoding='utf-8')
-        self.readfp(f)
+        self.read_file(f)
         f.close()
 
         ''' set defaults '''
@@ -158,8 +157,8 @@ class Config(RawConfigParser):
         try:
             val = self.get(section, key)
             val = [s.strip() for s in val.split(',')]
-        except Exception, e:
-            logging.warn("Expecting a list in section `%s', key `%s' (%s)" % (section, key, str(e)))
+        except Exception as e:
+            logging.warning("Expecting a list in section `%s', key `%s' (%s)" % (section, key, str(e)))
 
         return val
 
@@ -302,7 +301,7 @@ class PeriodicThread(object):
         """
         try:
             self.run()
-        except Exception, e:
+        except Exception as e:
             logging.exception("Exception in running periodic thread")
         finally:
             with self.schedule_lock:
@@ -335,8 +334,8 @@ class PeriodicThread(object):
 
 try:
     cf = Config(CONFIGFILE)
-except Exception, e:
-    print "Cannot open configuration at %s: %s" % (CONFIGFILE, str(e))
+except Exception as e:
+    print(f"Cannot open configuration at {CONFIGFILE}: {e}")
     sys.exit(2)
 
 LOGLEVEL  = cf.loglevelnumber
@@ -361,7 +360,7 @@ logging.info("Log level is %s" % logging.getLevelName(LOGLEVEL))
 mqttc = paho.Client(cf.clientid, clean_session=cf.cleansession, protocol=cf.protocol)
 
 # initialise processor queue
-q_in = Queue.Queue(maxsize=0)
+q_in = queue.Queue(maxsize=0)
 exit_flag = False
 
 ptlist = {}         # List of PeriodicThread() objects
@@ -449,7 +448,7 @@ def get_sections():
         if cf.has_option(section, 'targets'):
             sections.append(section)
         else:
-            logging.warn("Section `%s' has no targets defined" % section)
+            logging.warning("Section `%s' has no targets defined" % section)
     return sections
 
 def get_topic(section):
@@ -508,8 +507,8 @@ def is_filtered(section, topic, payload):
         filterfunc = get_function_name( cf.get(section, 'filter') )
         try:
             return cf.filter(filterfunc, topic, payload, section)
-        except Exception, e:
-            logging.warn("Cannot invoke filter function %s defined in %s: %s" % (filterfunc, section, str(e)))
+        except Exception as e:
+            logging.warning("Cannot invoke filter function %s defined in %s: %s" % (filterfunc, section, str(e)))
     return False
 
 def get_function_name(s):
@@ -529,8 +528,8 @@ def get_topic_data(section, topic):
         name = get_function_name(cf.get(section, 'datamap'))
         try:
             return cf.datamap(name, topic)
-        except Exception, e:
-            logging.warn("Cannot invoke datamap function %s defined in %s: %s" % (name, section, str(e)))
+        except Exception as e:
+            logging.warning("Cannot invoke datamap function %s defined in %s: %s" % (name, section, str(e)))
     return None
 
 def get_all_data(section, topic, data):
@@ -538,8 +537,8 @@ def get_all_data(section, topic, data):
         name = get_function_name(cf.get(section, 'alldata'))
         try:
             return cf.alldata(name, topic, data)
-        except Exception, e:
-            logging.warn("Cannot invoke alldata function %s defined in %s: %s" % (name, section, str(e)))
+        except Exception as e:
+            logging.warning("Cannot invoke alldata function %s defined in %s: %s" % (name, section, str(e)))
     return None
 
 def get_topic_targets(section, topic, data):
@@ -552,7 +551,7 @@ def get_topic_targets(section, topic, data):
             return cf.topic_target_list(name, topic, data)
         except Exception as ex:
             error = repr(ex)
-            logging.warn('Error invoking topic targets function "{name}" ' \
+            logging.warning('Error invoking topic targets function "{name}" ' \
                          'defined in section "{section}": {error}'.format(**locals()))
     return None
 
@@ -661,13 +660,13 @@ def on_message(mosq, userdata, msg):
 
 def send_failover(reason, message):
     # Make sure we dump this event to the log
-    logging.warn(message)
+    logging.warning(message)
     # Attempt to send the message to our failover targets
     send_to_targets('failover', reason, message)
 
 def send_to_targets(section, topic, payload):
     if cf.has_section(section) == False:
-        logging.warn("Section [%s] does not exist in your INI file, skipping message on %s" % (section, topic))
+        logging.warning("Section [%s] does not exist in your INI file, skipping message on %s" % (section, topic))
         return
 
     # decode raw payload into transformation data
@@ -745,7 +744,7 @@ def send_to_targets(section, topic, payload):
             try:
                 service, target = t.split(':', 2)
             except:
-                logging.warn("Invalid target %s - should be 'service:target'" % (t))
+                logging.warning("Invalid target %s - should be 'service:target'" % (t))
                 continue
 
         # skip targets with invalid services
@@ -817,12 +816,12 @@ def xform(function, orig_value, transform_data):
             try:
                 res = cf.datamap(function_name, transform_data)
                 return res
-            except Exception, e:
-                logging.warn("Cannot invoke %s(): %s" % (function_name, str(e)))
+            except Exception as e:
+                logging.warning("Cannot invoke %s(): %s" % (function_name, str(e)))
 
         try:
             res = Formatter().format(function, **transform_data).encode('utf-8')
-        except Exception, e:
+        except Exception as e:
             logging.warning("Cannot format message: %s" % e)
 
     if type(res) == str:
@@ -879,7 +878,8 @@ def decode_payload(section, topic, payload):
     try:
         payload = payload.rstrip("\0")
         payload_data = json.loads(payload)
-        transform_data = dict(transform_data.items() + payload_data.items())
+        transform_data = dict(transform_data.items())
+        transform_data.update(payload_data.items())
     except Exception as ex:
         logging.debug(u"Cannot decode JSON object, payload={payload}: {ex}".format(**locals()))
 
@@ -914,7 +914,7 @@ def processor(worker_id=None):
                                 "non-existing target {target} in service {service}".format(**locals())
                 raise KeyError(error_message)
 
-        except Exception, e:
+        except Exception as e:
             logging.error("Cannot handle service=%s, target=%s: %s" % (service, target, repr(e)))
             q_in.task_done()
             continue
@@ -943,12 +943,12 @@ def processor(worker_id=None):
 
         try:
             item['priority'] = int(xform(get_config(section, 'priority'), 0, transform_data))
-        except Exception, e:
+        except Exception as e:
             item['priority'] = 0
-            logging.warn("Failed to determine the priority, defaulting to zero: %s" % (str(e)))
+            logging.warning("Failed to determine the priority, defaulting to zero: %s" % (str(e)))
 
         if HAVE_JINJA is False and get_config(section, 'template'):
-            logging.warn("Templating not possible because Jinja2 is not installed")
+            logging.warning("Templating not possible because Jinja2 is not installed")
 
         if HAVE_JINJA is True:
             template = get_config(section, 'template')
@@ -957,8 +957,8 @@ def processor(worker_id=None):
                     text = render_template(template, transform_data)
                     if text is not None:
                         item['message'] = text
-                except Exception, e:
-                    logging.warn("Cannot render `%s' template: %s" % (template, str(e)))
+                except Exception as e:
+                    logging.warning("Cannot render `%s' template: %s" % (template, str(e)))
 
         if item.get('message') is not None and len(item.get('message')) > 0:
             st = Struct(**item)
@@ -967,13 +967,13 @@ def processor(worker_id=None):
                 # fire the plugin in a separate thread and kill it if it doesn't return in 10s 
                 module = service_plugins[service]['module']
                 notified = timeout(module.plugin, (srv, st))
-            except Exception, e:
+            except Exception as e:
                 logging.error("Cannot invoke service for `%s': %s" % (service, str(e)))
 
             if not notified:
-                logging.warn("Notification of %s for `%s' FAILED or TIMED OUT" % (service, item.get('topic')))
+                logging.warning("Notification of %s for `%s' FAILED or TIMED OUT" % (service, item.get('topic')))
         else:
-            logging.warn("Notification of %s for `%s' suppressed: text is empty" % (service, item.get('topic')))
+            logging.warning("Notification of %s for `%s' suppressed: text is empty" % (service, item.get('topic')))
 
         q_in.task_done()
 
@@ -983,7 +983,7 @@ def processor(worker_id=None):
 def load_module(path):
     try:
         fp = open(path, 'rb')
-        return imp.load_source(md(path).hexdigest(), path, fp)
+        return imp.load_source(md(path.encode()).hexdigest(), path, fp)
     finally:
         try:
             fp.close()
@@ -1007,7 +1007,7 @@ def load_services(services):
         try:
             service_plugins[service]['module'] = load_module(modulefile)
             logging.debug("Service %s loaded" % (service))
-        except Exception, e:
+        except Exception as e:
             logging.error("Can't load %s service (%s): %s" % (service, modulefile, str(e)))
             sys.exit(1)
 
@@ -1024,7 +1024,7 @@ def connect():
 
     try:
         os.chdir(cf.directory)
-    except Exception, e:
+    except Exception as e:
         logging.error("Cannot chdir to %s: %s" % (cf.directory, str(e)))
         sys.exit(2)
 
@@ -1058,7 +1058,7 @@ def connect():
 
     try:
         mqttc.connect(cf.hostname, int(cf.port), 60)
-    except Exception, e:
+    except Exception as e:
         logging.error("Cannot connect to MQTT broker at %s:%d: %s" % (cf.hostname, int(cf.port), str(e)))
         sys.exit(2)
 
