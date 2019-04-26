@@ -248,10 +248,7 @@ class Config(RawConfigParser):
         rc = False
         try:
             func = load_function(name)
-            try:
-                rc = func(topic, payload, section, srv)  # new version
-            except TypeError:
-                rc = func(topic, payload)                # legacy signature
+            rc = func(topic, payload, section, srv)  # new version
         except:
             raise
 
