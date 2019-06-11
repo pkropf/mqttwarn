@@ -41,7 +41,7 @@ I've written an introductory post, explaining [what mqttwarn can be used for](ht
   
   You'll need at least the following components:
   
-  * Python 2.x (tested with 2.6 and 2.7)
+  * Python 3.x (tested with 3.7)
   * An MQTT broker (e.g. [Mosquitto](http://mosquitto.org))
   * The Paho Python module: `pip install paho-mqtt`
   
